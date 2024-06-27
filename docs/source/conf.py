@@ -35,14 +35,13 @@ templates_path = ['_templates']
 exclude_patterns = []
 
 
-
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
 
-dunderlab_color_links = '#4EAE8B'
+dunderlab_color_links = '#7268A6'
 dunderlab_code_reference = True
 dunderlab_github_repository = "https://github.com/Redes-de-Monitoreo-Multiproposito/python-gcpds.em_spectrum_monitor"
 
@@ -92,7 +91,6 @@ autodoc_typehints_description_target = 'all'  # Types are documented for all par
 # Uncomment one of the following lines to set the desired format for typehints
 autodoc_typehints_format = 'short'  # Suppress the leading module names of the typehints (default)
 # autodoc_typehints_format = 'fully-qualified'  # Show the module name and its name of typehints
-
 
 # autodoc_mock_imports
 # This value contains a list of modules to be mocked up. This is useful when some external dependencies

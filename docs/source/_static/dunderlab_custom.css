@@ -1,6 +1,6 @@
 :root {
-  --accent: #4EAE8B;
-  --accent_dark: #367961;
+  --accent: #7268A6;
+  --accent_dark: #4f4874;
 }
 
 pre.literal-block,
@@ -12,7 +12,7 @@ pre.literal-block,
 }
 
 .docutils.literal {
-    color: #4EAE8B;
+    color: #7268A6;
     padding: 1px 4px;
     margin: 0 -2px;
     border-radius: 2px;
@@ -23,13 +23,13 @@ div.nbinput.container div.input_area {
 }
 
 a.reference {
-    border-bottom: 1px dotted #4EAE8B;
-    color: #4EAE8B;
+    border-bottom: 1px dotted #7268A6;
+    color: #7268A6;
 }
 
 a.reference:hover {
-    border-bottom: 1px solid #367961;
-    color: #367961;
+    border-bottom: 1px solid #4f4874;
+    color: #4f4874;
 }
 
 h1 {
@@ -89,7 +89,7 @@ dl:not(.docutils) dl dt {
     margin-top: 80px;
     background-color: #7878780d;
     padding: 15px 30px;
-    border: 1px solid #4EAE8B;
+    border: 1px solid #7268A6;
     border-width: 3px 0 0 0;
     border-radius: 5px;
 }

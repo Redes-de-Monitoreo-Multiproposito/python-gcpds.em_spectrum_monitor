@@ -1,2 +1,2 @@
-Electromagnetic -Spectrum Monitor
-=================================
+Electromagnetic Spectrum Monitor
+================================

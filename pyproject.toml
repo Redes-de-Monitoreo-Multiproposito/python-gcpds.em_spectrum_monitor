@@ -38,6 +38,7 @@ include = ["gcpds"]
 
 [project.optional-dependencies]
 dev = [
+    "pyhackrf2",
     # "networkx",
     # "matplotlib"
     ]
