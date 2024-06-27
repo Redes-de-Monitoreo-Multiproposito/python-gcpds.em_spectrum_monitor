@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath('../../gcpds'))
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'Electromagnetic -Spectrum Monitor'
+project = 'Electromagnetic Spectrum Monitor'
 copyright = '2024, Yeison Cardona'
 author = 'Yeison Cardona'
 
