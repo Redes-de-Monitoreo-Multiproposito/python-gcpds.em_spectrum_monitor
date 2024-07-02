@@ -11,9 +11,8 @@ class Stations:
     def __init__(self):
         """"""
 
-        xml_file_path = 'xml-propertyvalue-754348.xml'
-
         # Load and parse the XML file
+        xml_file_path = 'xml-propertyvalue-754348.xml'
         tree = ET.parse(xml_file_path)
         self.root = tree.getroot()
 
