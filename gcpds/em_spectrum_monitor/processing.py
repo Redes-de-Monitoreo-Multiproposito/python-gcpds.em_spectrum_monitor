@@ -1,7 +1,7 @@
 import numpy as np
-from scipy.signal import welch, windows
-from scipy.fftpack import fft
-from scipy.signal import spectrogram
+from scipy.signal import welch, windows  # windows no se usa
+from scipy.fftpack import fft  # No se usa
+from scipy.signal import spectrogram  # No se usa
 
 class Processing:
     """
@@ -40,6 +40,7 @@ class Processing:
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
 
+        # YC: Solo debe retornar la parte positiva
         return np.fft.fft(signal)
 
     # ----------------------------------------------------------------------
@@ -73,11 +74,12 @@ class Processing:
         overlapping segments, windowed, and then averaged to reduce variance.
         """
         if not isinstance(signal, np.ndarray):
-            raise ValueError("Input signal must be a numpy array")
+            raise ValueError("Input signal must be un numpy array")
 
         signal = signal - np.mean(signal)
 
-        f, Pxx = welch(signal, fs=fs, nperseg = 1024, window = 'hann', noverlap = 512)
+        # YN: Revisar valores de nperseg y noverlap
+        f, Pxx = welch(signal, fs=fs, nperseg=1024, window='hann', noverlap=512)
         return f, Pxx
 
     # ----------------------------------------------------------------------
@@ -115,6 +117,8 @@ class Processing:
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
 
+        # YN: Qué tiene que ver un modulo para señales neurofisioløgicas en este proyecto?
+        # YN: La importaciones no van a mitad de código
         from mne.time_frequency import psd_array_multitaper
 
         psd, freqs = psd_array_multitaper(signal, sfreq=fs, adaptive=True, normalization='full', verbose=0)
@@ -153,6 +157,7 @@ class Processing:
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
 
+        # YN: La importaciones no van a mitad de código
         import pywt
 
         coeffs, _ = pywt.cwt(signal, scales, 'cmor')
