@@ -98,9 +98,10 @@ autodoc_typehints_format = 'short'  # Suppress the leading module names of the t
 # the dependencies themselves and omit the sub-modules.
 autodoc_mock_imports = [
     # Uncomment the modules you need to mock
-    # "numpy",
+    "numpy",
     # "pandas",
     # "matplotlib",
     # "seaborn",
     # "networkx",
+    "pyhackrf2"
 ]
