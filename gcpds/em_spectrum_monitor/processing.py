@@ -75,7 +75,9 @@ class Processing:
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
 
-        f, Pxx = welch(signal, fs=fs)
+        signal = signal - np.mean(signal)
+
+        f, Pxx = welch(signal, fs=fs, nperseg = 1024, window = 'hann', noverlap = 512)
         return f, Pxx
 
     # ----------------------------------------------------------------------
