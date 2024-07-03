@@ -80,6 +80,9 @@ class Processing:
 
         # YN: Revisar valores de nperseg y noverlap
         f, Pxx = welch(signal, fs=fs, nperseg=1024, window='hann', noverlap=512)
+
+        f = np.fft.fftshift(f)
+        Pxx = np.fft.fftshift(Pxx)
         return f, Pxx
 
     # ----------------------------------------------------------------------
