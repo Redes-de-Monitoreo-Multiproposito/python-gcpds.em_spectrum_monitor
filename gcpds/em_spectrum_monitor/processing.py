@@ -1,7 +1,7 @@
 import numpy as np
-from scipy.signal import welch, windows  # windows no se usa
-from scipy.fftpack import fft  # No se usa
-from scipy.signal import spectrogram  # No se usa
+from scipy.signal import welch
+from mne.time_frequency import psd_array_multitaper
+import pywt
 
 class Processing:
     """
@@ -39,9 +39,12 @@ class Processing:
         """
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
+        
+        N = len(signal)
+        fft_result = np.fft.fft(signal)
+        fft_ = fft_result[:N//2]
 
-        # YC: Solo debe retornar la parte positiva
-        return np.fft.fft(signal)
+        return fft_
 
     # ----------------------------------------------------------------------
     def welch(self, signal: np.ndarray, fs: float = 1.0) -> np.ndarray:
@@ -120,9 +123,15 @@ class Processing:
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
 
-        # YN: Qué tiene que ver un modulo para señales neurofisioløgicas en este proyecto?
-        # YN: La importaciones no van a mitad de código
-        from mne.time_frequency import psd_array_multitaper
+        """
+        The psd_array_multitaper from the mne.time_frequency module is being used 
+        due to its robust implementation of the multi-taper method for estimating 
+        power spectral density (PSD). Although mne is primarily designed for the 
+        analysis of neurophysiological signals, the multi-taper method is a general 
+        technique applicable to any type of signal, including radio frequency (RF) signal.
+        This specific implementation is well known for its ability to reduce spectral 
+        leakage and provide better frequency resolution, which is critical for RF signal analysis.
+        """
 
         psd, freqs = psd_array_multitaper(signal, sfreq=fs, adaptive=True, normalization='full', verbose=0)
         return freqs, psd
@@ -159,9 +168,7 @@ class Processing:
         """
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
-
-        # YN: La importaciones no van a mitad de código
-        import pywt
+    
 
         coeffs, _ = pywt.cwt(signal, scales, 'cmor')
         return coeffs
