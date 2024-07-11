@@ -1,6 +1,8 @@
-from pyhackrf2 import HackRF
+from hackrf import HackRF
 import numpy as np
 from typing import Union, Literal
+from gcpds.filters import frequency as flt
+
 
 
 ########################################################################
@@ -9,11 +11,8 @@ class Scanning:
 
     # ----------------------------------------------------------------------
     def __init__(self,
-                 filter_bandwidth: float = 20e6,
-                 sample_count_limit: float = 5e5,
-                 vga_gain: int = 16,
+                 vga_gain: int = 0,
                  lna_gain: int = 0,
-                 amplifier_on: bool = False,
                  sample_rate: float = 20e6,
                  overlap: int = 0,
                  time_to_read: float = 1,
@@ -22,16 +21,10 @@ class Scanning:
 
         Parameters
         ----------
-        filter_bandwidth : float, optional
-            The bandwidth of the filter in Hz (default is 20e6).
-        sample_count_limit : float, optional
-            Limit on the number of samples (default is 5e5).
         vga_gain : int, optional
-            Gain for the VGA (default is 16).
+            Gain for the VGA (default is 0).
         lna_gain : int, optional
             Gain for the LNA (default is 0).
-        amplifier_on : bool, optional
-            Enable or disable the amplifier (default is False).
         sample_rate : float, optional
             Sample rate in Hz (default is 20e6).
         overlap : int, optional
@@ -40,11 +33,8 @@ class Scanning:
             Duration of time to read samples in seconds (default is 1).
         """
         self.hackrf = HackRF()
-        self.hackrf.filter_bandwidth = int(filter_bandwidth)
-        self.hackrf.sample_count_limit = int(sample_count_limit)
         self.hackrf.vga_gain = int(vga_gain)
         self.hackrf.lna_gain = int(lna_gain)
-        self.hackrf.amplifier_on = amplifier_on
         self.hackrf.sample_rate = int(sample_rate)
 
         self.overlap = int(overlap)
@@ -74,9 +64,14 @@ class Scanning:
         """
         sample_rate = self.hackrf.sample_rate
         wide_samples = []
-        for center_freq in range(int(start), int(end), int(sample_rate - self.overlap)):
+        for center_freq in range(int(start+sample_rate/2), int(end), int(sample_rate - self.overlap)):
             self.hackrf.center_freq = center_freq
             samples = np.array(self.hackrf.read_samples(self.samples_to_read))
+
+            samples = samples - np.mean(samples)
+
+            high100 = flt.GenericButterHighPass(f0=0.01, N=1)
+            samples = high100(samples, fs=250)
 
             wide_samples.append({
                 'start': center_freq,
