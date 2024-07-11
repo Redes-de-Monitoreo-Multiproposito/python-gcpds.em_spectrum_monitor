@@ -64,7 +64,14 @@ class Scanning:
         """
         sample_rate = self.hackrf.sample_rate
         wide_samples = []
-        for center_freq in range(int(start+sample_rate/2), int(end), int(sample_rate - self.overlap)):
+        
+        steps = np.array(range(int(start+sample_rate/2), int((end+sample_rate/2)), int(sample_rate - self.overlap)))
+
+        if start-end>self.hackrf.sample_rate:
+            if steps[-2] + (sample_rate/2)>=end:
+                steps = steps[:-1]
+
+        for center_freq in steps:
             self.hackrf.center_freq = center_freq
             samples = np.array(self.hackrf.read_samples(self.samples_to_read))
 
