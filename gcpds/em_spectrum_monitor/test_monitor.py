@@ -23,7 +23,7 @@ class TestScanning(unittest.TestCase):
         self.assertEqual(self.scanning.hackrf.lna_gain, 0)
         self.assertEqual(self.scanning.hackrf.sample_rate, 20e6)
 
-    def test_scanning(self):
+    def test_scan(self):
         """
         Verify that the structure of the read data is as expected, 
         and that each element within the list is of the expected type
@@ -44,7 +44,7 @@ class TestScanning(unittest.TestCase):
             self.assertIsInstance(stay['sample_rate'], int)
             self.assertIsInstance(stay['overlap'], int)
             
-    def test_concat(self):
+    def test_concatenate(self):
         """
         Check that the size of the concatenated samples is as expected and type of some samples.
         """
