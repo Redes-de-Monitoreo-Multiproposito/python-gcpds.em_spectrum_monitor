@@ -190,6 +190,3 @@ class Scanning:
         elif type_save == 'h5':
             with h5py.File(os.path.join('database', f'Samples {start/1e6} and {end/1e6}MHz with time to read {time_to_read}s.npy and {overlap}MHz overlap.h5'), 'w') as hf:
                 hf.create_dataset('samples', data=samples)
-
-scan = Scanning()
-scan.write()
