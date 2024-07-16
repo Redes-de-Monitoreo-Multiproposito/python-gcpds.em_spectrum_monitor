@@ -1,7 +1,9 @@
 import numpy as np
 from scipy.signal import welch
 from mne.time_frequency import psd_array_multitaper
+from monitor import Scanning
 import pywt
+from scipy.signal import resample_poly
 
 class Processing:
     """
@@ -11,7 +13,7 @@ class Processing:
     """
 
     # ----------------------------------------------------------------------
-    def fft(self, signal: np.ndarray) -> np.ndarray:
+    def fft(self, signal: np.ndarray, sample_rate: int=20e6) -> np.ndarray:
         """
         Compute the Fast Fourier Transform of the given signal.
 
@@ -39,12 +41,25 @@ class Processing:
         """
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
-        
-        N = len(signal)
-        fft_result = np.fft.fft(signal)
-        fft_ = fft_result[:N//2]
 
-        return fft_
+        signal_iq_interp_real = resample_poly(signal.real, up=2, down=1, padtype='line')
+        signal_iq_interp_imag = resample_poly(signal.imag, up=2, down=1, padtype='line')
+        signal_iq_interp = signal_iq_interp_real + 1j * signal_iq_interp_imag
+
+        freq_shift = sample_rate/2
+        fs_real = sample_rate * 2
+        time_vector = np.arange(len(signal_iq_interp))
+        complex_sine = np.exp(1j*2*np.pi* (freq_shift/fs_real) * time_vector)
+        signal_shifted = signal_iq_interp * complex_sine
+
+        signal_real = signal_shifted.real
+
+        N = len(signal_real)
+        fft_result = np.fft.fft(signal_real)
+        fft = fft_result[:N//2]
+        fft = np.abs(fft)
+
+        return fft
 
     # ----------------------------------------------------------------------
     def welch(self, signal: np.ndarray, fs: float = 1.0) -> np.ndarray:
