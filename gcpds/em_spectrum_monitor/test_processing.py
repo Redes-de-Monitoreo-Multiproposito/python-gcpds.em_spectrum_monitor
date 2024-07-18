@@ -1,5 +1,4 @@
 import unittest
-from unittest.mock import patch, MagicMock
 import numpy as np
 from monitor import Scanning
 from processing import Processing
