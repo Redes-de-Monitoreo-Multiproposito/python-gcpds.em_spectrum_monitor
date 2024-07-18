@@ -1,9 +1,13 @@
 import numpy as np
 from scipy.signal import welch
 from mne.time_frequency import psd_array_multitaper
-from monitor import Scanning
+from typing import Literal
 import pywt
 from scipy.signal import resample_poly
+
+# --------Eliminar----------#
+from monitor import Scanning
+import matplotlib.pyplot as plt
 
 class Processing:
     """
@@ -12,8 +16,54 @@ class Processing:
     Multi-taper method, and Wavelet transform.
     """
 
+    def convert_to_real(self, signal: np.ndarray, method: Literal['inter', 'sincos'], sample_rate: int=20e6, start: int=None, end: int=None, center_freq: int=None) -> np.ndarray:
+        """
+        Convert the complex signal to a real signal by interpolating and frequency shifting.
+
+        Parameters
+        ----------
+        signal : np.ndarray
+            An array representing the complex signal where the real part is the in-phase component (I)
+            and the imaginary part is the quadrature component (Q).
+        method : Literal['inter', 'sincos']
+            Method for conversion.
+        sample_rate : int, optional
+            The sampling rate of the signal. Defaults to 20e6.
+        start : int, optional
+            Start time. Defaults to None.
+        end : int, optional
+            End time. Defaults to None.
+        center_freq : int, optional
+            Center frequency. Defaults to None.
+
+        Returns
+        -------
+        np.ndarray
+            A signal converted in real signal
+        """
+        match method:
+            case 'inter':
+                signal_iq_interp_real = resample_poly(signal.real, up=2, down=1, padtype='line')
+                signal_iq_interp_imag = resample_poly(signal.imag, up=2, down=1, padtype='line')
+                signal_iq_interp = signal_iq_interp_real + 1j * signal_iq_interp_imag
+
+                freq_shift = sample_rate/2
+                fs_real = sample_rate * 2
+                time_vector = np.arange(len(signal_iq_interp))
+                complex_sine = np.exp(1j*2*np.pi* (freq_shift/fs_real) * time_vector)
+                signal_shifted = signal_iq_interp * complex_sine
+
+                signal = signal_shifted.real
+
+            case 'sincos':
+                t = np.linspace(start, end, len(signal))
+                signal = signal.real * np.cos(2 * np.pi * center_freq * t) * signal.imag * np.sin(2 * np.pi * center_freq * t)
+            
+        return signal
+
+    
     # ----------------------------------------------------------------------
-    def fft(self, signal: np.ndarray, sample_rate: int=20e6) -> np.ndarray:
+    def fft(self, signal: np.ndarray) -> np.ndarray:
         """
         Compute the Fast Fourier Transform of the given signal.
 
@@ -42,27 +92,15 @@ class Processing:
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be a numpy array")
 
-        signal_iq_interp_real = resample_poly(signal.real, up=2, down=1, padtype='line')
-        signal_iq_interp_imag = resample_poly(signal.imag, up=2, down=1, padtype='line')
-        signal_iq_interp = signal_iq_interp_real + 1j * signal_iq_interp_imag
-
-        freq_shift = sample_rate/2
-        fs_real = sample_rate * 2
-        time_vector = np.arange(len(signal_iq_interp))
-        complex_sine = np.exp(1j*2*np.pi* (freq_shift/fs_real) * time_vector)
-        signal_shifted = signal_iq_interp * complex_sine
-
-        signal_real = signal_shifted.real
-
-        N = len(signal_real)
-        fft_result = np.fft.fft(signal_real)
+        N = len(signal)
+        fft_result = np.fft.fft(signal)
         fft = fft_result[:N//2]
         fft = np.abs(fft)
 
         return fft
 
     # ----------------------------------------------------------------------
-    def welch(self, signal: np.ndarray, fs: float = 1.0) -> np.ndarray:
+    def welch(self, signal: np.ndarray, fs: float = 20e6) -> np.ndarray:
         """
         Estimate the power spectral density of the given signal using Welch's method.
 
@@ -73,7 +111,7 @@ class Processing:
             the real part is the in-phase component (I) and the imaginary part
             is the quadrature component (Q).
         fs : float, optional
-            The sampling frequency of the signal. Default is 1.0.
+            The sampling frequency of the signal. Default is 20M.
 
         Returns
         -------
@@ -91,10 +129,6 @@ class Processing:
         the power spectral density of the signal. The signal is divided into
         overlapping segments, windowed, and then averaged to reduce variance.
         """
-        if not isinstance(signal, np.ndarray):
-            raise ValueError("Input signal must be un numpy array")
-
-        signal = signal - np.mean(signal)
 
         """
         nperseg: int, optional
@@ -112,6 +146,9 @@ class Processing:
             Number of points to overlap between segments. If None, noverlap = nperseg // 2. Defaults to None.
         """
 
+        if not isinstance(signal, np.ndarray):
+            raise ValueError("Input signal must be un numpy array")
+
         f, Pxx = welch(signal, fs=fs, nperseg=1024, window='hann')
 
         f = np.fft.fftshift(f)
@@ -119,7 +156,7 @@ class Processing:
         return f, Pxx
 
     # ----------------------------------------------------------------------
-    def multi_taper(self, signal: np.ndarray, fs: float = 1.0) -> np.ndarray:
+    def multi_taper(self, signal: np.ndarray, fs: float = 20e6) -> np.ndarray:
         """
         Estimate the power spectral density of the given signal using the Multi-taper method.
 
@@ -150,8 +187,6 @@ class Processing:
         orthogonal windowing functions (tapers) are used to obtain independent
         estimates of the power spectrum, which are then averaged.
         """
-        if not isinstance(signal, np.ndarray):
-            raise ValueError("Input signal must be a numpy array")
 
         """
         The psd_array_multitaper from the mne.time_frequency module is being used 
@@ -163,11 +198,15 @@ class Processing:
         leakage and provide better frequency resolution, which is critical for RF signal analysis.
         """
 
-        psd, freqs = psd_array_multitaper(signal, sfreq=fs, adaptive=True, normalization='full', verbose=0)
+        if not isinstance(signal, np.ndarray):
+            raise ValueError("Input signal must be a numpy array")        
+
+        psd, freqs = psd_array_multitaper(signal, sfreq=fs)
         return freqs, psd
 
     # ----------------------------------------------------------------------
     def wavelet(self, signal: np.ndarray, scales: np.ndarray) -> np.ndarray:
+
         """
         Perform wavelet transform on the given signal.
 
@@ -202,3 +241,19 @@ class Processing:
 
         coeffs, _ = pywt.cwt(signal, scales, 'cmor')
         return coeffs
+    
+# --------Eliminar----------#
+
+scan = Scanning(time_to_read=0.1)
+wide_samples = scan.scan(88e6, 108e6)
+samples = scan.concatenate(wide_samples, 'mean')
+
+pros = Processing()
+real = pros.convert_to_real(samples, 'inter')
+
+f, Pxx = pros.welch(samples)
+
+plt.semilogy(f, Pxx)
+plt.xlabel('frequency [Hz]')
+plt.ylabel('PSD [V**2/Hz]')
+plt.show()
