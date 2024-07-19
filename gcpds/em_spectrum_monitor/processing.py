@@ -5,9 +5,6 @@ from typing import Literal
 import pywt
 from scipy.signal import resample_poly
 
-# --------Eliminar----------#
-from monitor import Scanning
-import matplotlib.pyplot as plt
 
 class Processing:
     """
@@ -167,7 +164,7 @@ class Processing:
             the real part is the in-phase component (I) and the imaginary part
             is the quadrature component (Q).
         fs : float, optional
-            The sampling frequency of the signal. Default is 1.0.
+            The sampling frequency of the signal. Default is 20e6.
 
         Returns
         -------
@@ -206,6 +203,7 @@ class Processing:
 
     # ----------------------------------------------------------------------
     def wavelet(self, signal: np.ndarray, scales: np.ndarray) -> np.ndarray:
+    
 
         """
         Perform wavelet transform on the given signal.
@@ -241,19 +239,3 @@ class Processing:
 
         coeffs, _ = pywt.cwt(signal, scales, 'cmor')
         return coeffs
-    
-# --------Eliminar----------#
-
-scan = Scanning(time_to_read=0.1)
-wide_samples = scan.scan(88e6, 108e6)
-samples = scan.concatenate(wide_samples, 'mean')
-
-pros = Processing()
-real = pros.convert_to_real(samples, 'inter')
-
-f, Pxx = pros.welch(samples)
-
-plt.semilogy(f, Pxx)
-plt.xlabel('frequency [Hz]')
-plt.ylabel('PSD [V**2/Hz]')
-plt.show()
