@@ -1,18 +1,28 @@
 ########################################################################
 import numpy as np
+from scipy.signal import find_peaks
 
 class Detection:
     """"""
 
     # ----------------------------------------------------------------------
-    def __init__(self):
+    def __init__(self, f, Pxx, sample_rate):
         """Constructor"""
-
+        self.f = np.linspace(88, 108, len(Pxx))
+        self.Pxx = Pxx
+        self.sample_rate = sample_rate
 
     # ----------------------------------------------------------------------
-    def procescia(self):
+    def presencia(self, Pxx, threshold):
         """"""
+        self.peaks, self.properties = find_peaks(Pxx, height=0, threshold=threshold)
 
+        peak_powers = self.properties['peak_heights']
+        peak_freqs = self.f[self.peaks]
+
+        emisoras = [(freq, power) for freq, power in zip(peak_freqs, peak_powers)]
+
+        return emisoras
     # ----------------------------------------------------------------------
     def separación(self):
         """"""
@@ -104,4 +114,3 @@ class Detection:
 
         # Compare the test statistic with the threshold
         return test_statistic > threshold
-
