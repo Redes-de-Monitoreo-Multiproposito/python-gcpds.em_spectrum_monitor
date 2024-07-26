@@ -13,9 +13,9 @@ class Processing:
     Multi-taper method, and Wavelet transform.
     """
 
-    def convert_to_real(self, signal: np.ndarray, method: Literal['inter', 'sincos'], sample_rate: int=20e6, start: int=None, end: int=None, center_freq: int=None) -> np.ndarray:
+    def convert_to_real(self, signal: np.ndarray, method: Literal['inter', 'sincos'], sample_rate: int=20e6, time_to_read: float=0.01, center_freq: int=None,) -> np.ndarray:
         """
-        Convert the complex signal to a real signal by interpolating and frequency shifting.
+        Convert the complex signal to a real signal by interpolating and frequency shifting or using the sin cosin signal.
 
         Parameters
         ----------
@@ -26,10 +26,6 @@ class Processing:
             Method for conversion.
         sample_rate : int, optional
             The sampling rate of the signal. Defaults to 20e6.
-        start : int, optional
-            Start time. Defaults to None.
-        end : int, optional
-            End time. Defaults to None.
         center_freq : int, optional
             Center frequency. Defaults to None.
 
@@ -53,8 +49,8 @@ class Processing:
                 signal = signal_shifted.real
 
             case 'sincos':
-                t = np.linspace(start, end, len(signal))
-                signal = signal.real * np.cos(2 * np.pi * center_freq * t) * signal.imag * np.sin(2 * np.pi * center_freq * t)
+                t = np.linspace(0, time_to_read, len(signal))
+                signal = signal.real * np.cos(2 * np.pi * center_freq * t) - signal.imag * np.sin(2 * np.pi * center_freq * t)
             
         return signal
 
@@ -91,6 +87,7 @@ class Processing:
 
         N = len(signal)
         fft_result = np.fft.fft(signal)
+        
         fft = fft_result[:N//2]
         fft = np.abs(fft)
 
