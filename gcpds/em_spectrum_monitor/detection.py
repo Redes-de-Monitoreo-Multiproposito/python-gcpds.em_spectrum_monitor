@@ -1,4 +1,3 @@
-########################################################################
 import numpy as np
 from scipy.signal import find_peaks
 
@@ -6,29 +5,47 @@ class Detection:
     """"""
 
     # ----------------------------------------------------------------------
-    def __init__(self, f, Pxx, sample_rate):
+    def __init__(self):
         """Constructor"""
-        self.f = np.linspace(88, 108, len(Pxx))
-        self.Pxx = Pxx
-        self.sample_rate = sample_rate
 
     # ----------------------------------------------------------------------
-    def presencia(self, Pxx, threshold):
+    def power_based_detection(self, f: np.ndarray, Pxx: np.ndarray):
+        """
+        Detects the presence of peaks in the power spectrum.
+
+        Parameters
+        ----------
+        f : numpy.ndarray
+            The frequencies corresponding to the power spectral density values.
+        Pxx : numpy.ndarray
+            The power spectral density values.
+
+        Returns
+        -------
+        peak_freqs : numpy.ndarray
+            The frequencies of the detected peaks.
+        peak_powers : numpy.ndarray
+            The powers of the detected peaks.
+        detections : list
+            A list with the frequency and power pairs
+        """
+
+        threshold = np.percentile(Pxx, 93)
+        
+        peaks, properties = find_peaks(Pxx, height=threshold)
+
+        peak_powers = properties['peak_heights']
+        peak_freqs = f[peaks]
+
+        detections = [(freq, power) for freq, power in zip(peak_freqs, peak_powers)]
+
+        return peak_freqs, peak_powers, detections
+    # ----------------------------------------------------------------------
+    def separation(self):
         """"""
-        self.peaks, self.properties = find_peaks(Pxx, height=0, threshold=threshold)
-
-        peak_powers = self.properties['peak_heights']
-        peak_freqs = self.f[self.peaks]
-
-        emisoras = [(freq, power) for freq, power in zip(peak_freqs, peak_powers)]
-
-        return emisoras
-    # ----------------------------------------------------------------------
-    def separación(self):
-        """"""
 
     # ----------------------------------------------------------------------
-    def potencia_max(self):
+    def max_power(self):
         """"""
 
     # ----------------------------------------------------------------------
@@ -36,7 +53,7 @@ class Detection:
         """"""
 
     # ----------------------------------------------------------------------
-    def ancho_de_bandas(self):
+    def bandwidth(self):
         """"""
 
 
