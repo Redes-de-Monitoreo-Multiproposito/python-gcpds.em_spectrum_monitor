@@ -39,7 +39,7 @@ class Detection:
 
         detections = [(freq, power) for freq, power in zip(peak_freqs, peak_powers)]
 
-        return peak_freqs, peak_powers, detections
+        return peak_freqs, peak_powers, detections, threshold
     # ----------------------------------------------------------------------
     def separation(self):
         """"""
