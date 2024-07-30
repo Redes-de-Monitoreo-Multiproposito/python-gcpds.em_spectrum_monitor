@@ -58,76 +58,170 @@ class Detection:
 
 
     # ----------------------------------------------------------------------
-    def eigenvalue_based_detection(freqs, psd, threshold):
+    def eigenvalue_base_detection_max(power_vector: np.ndarray, freq_vector: np.ndarray, threshold: float) -> str:
         """
-        Eigenvalue-based detection using Welch's method.
+        Detect signal presence based on the maximum eigenvalue of the covariance matrix of a power vector.
 
         Parameters
         ----------
-        freqs : numpy.ndarray
-            The frequencies corresponding to the power spectral density values.
-        psd : numpy.ndarray
-            The power spectral density values.
+        power_vector : np.ndarray
+            An array representing the power of the signal at various frequencies.
+        freq_vector : np.ndarray
+            An array representing the frequencies corresponding to the power values.
         threshold : float
-            The detection threshold.
+            The threshold value used to determine the presence of a signal.
 
         Returns
         -------
-        numpy.ndarray
-            The eigenvectors associated with the eigenvalues above the threshold.
+        str
+            A string indicating whether a signal is detected ("Señal detectada") or not ("No se detecta señal").
+
+        Raises
+        ------
+        ValueError
+            If the power_vector or freq_vector is not a numpy array, or if they are not of the same length.
 
         Notes
         -----
-        This function performs eigenvalue-based detection using the power spectral density
-        calculated via Welch's method. It computes the covariance matrix of the PSD, then
-        calculates its eigenvalues and eigenvectors. Eigenvectors corresponding to eigenvalues
-        above the specified threshold are returned.
+        This function computes the covariance matrix of the outer product of the power vector with itself.
+        It then calculates the eigenvalues of this covariance matrix and compares the maximum eigenvalue
+        to the given threshold to detect the presence of a signal.
+
+        BibTeX:
+        @ARTICLE{5089517,
+        author={Zeng, Y. and Liang, Y.-C.},
+        journal={IEEE Transactions on Communications}, 
+        title={Eigenvalue-based spectrum sensing algorithms for cognitive radio}, 
+        year={2009},
+        volume={57},
+        number={6},
+        pages={1784-1793},
+        keywords={Cognitive radio;Working environment noise;Uncertainty;Eigenvalues and eigenfunctions;Wireless sensor networks;Signal detection;Frequency;Covariance matrix;Microphones;Signal to noise ratio;Signal detection, spectrum sensing, sensing algorithm, cognitive radio, random matrix, eigenvalues, IEEE 802.22 wireless regional area networks (WRAN). },
+        doi={10.1109/TCOMM.2009.06.070402}}
         """
 
-        # Calculate the covariance matrix of the power spectral density
-        psd_covariance_matrix = np.cov(psd)
+        # Step 1: Calculate the covariance matrix
+        power_matrix = np.outer(power_vector, power_vector)
+        cov_matrix = np.cov(power_matrix)
 
-        # Calculate the eigenvalues and eigenvectors of the covariance matrix
-        eigenvalues, eigenvectors = np.linalg.eig(psd_covariance_matrix)
+        # Step 2: Calculate the eigenvalues ​​of the covariance matrix
+        eigenvalues, _ = np.linalg.eig(cov_matrix)
 
-        # Select eigenvectors corresponding to eigenvalues above the threshold
-        significant_eigenvectors = eigenvectors[:, eigenvalues > threshold]
+        # Step 3: Compare the maximum eigenvalue with the threshold
+        max_eigenvalue = np.max(eigenvalues)
 
-        return significant_eigenvectors
+        if max_eigenvalue > threshold:
+            return "Señal detectada"
+        else:
+            return "No se detecta señal"
+        
+    def energy_base_detection_min(power_vector: np.ndarray, freq_vector: np.ndarray, threshold: float) -> str:
+        """
+        Detect signal presence by comparing the average energy of the received signal to a noise threshold.
+
+        Parameters
+        ----------
+        power_vector : np.ndarray
+            An array representing the power of the signal at various frequencies.
+        freq_vector : np.ndarray
+            An array representing the frequencies corresponding to the power values.
+        threshold : float
+            The threshold value used to distinguish between signal and noise.
+
+        Returns
+        -------
+        str
+            A string indicating whether a signal is detected ("Señal detectada") or not ("No se detecta señal").
+
+        Raises
+        ------
+        ValueError
+            If the power_vector or freq_vector is not a numpy array, or if they are not of the same length.
+
+        Notes
+        -----
+        This function calculates the average energy of the received signal using the provided power vector.
+        It then compares the average energy to a specified noise threshold. If the average energy exceeds
+        the threshold, a signal is considered detected; otherwise, it is not.
+
+        BibTeX:
+        @ARTICLE{5089517,
+        author={Zeng, Y. and Liang, Y.-C.},
+        journal={IEEE Transactions on Communications}, 
+        title={Eigenvalue-based spectrum sensing algorithms for cognitive radio}, 
+        year={2009},
+        volume={57},
+        number={6},
+        pages={1784-1793},
+        keywords={Cognitive radio;Working environment noise;Uncertainty;Eigenvalues and eigenfunctions;Wireless sensor networks;Signal detection;Frequency;Covariance matrix;Microphones;Signal to noise ratio;Signal detection, spectrum sensing, sensing algorithm, cognitive radio, random matrix, eigenvalues, IEEE 802.22 wireless regional area networks (WRAN). },
+        doi={10.1109/TCOMM.2009.06.070402}}
+        """
+
+        # Step 1: Calculate the average energy of the received signal
+        energy_average = np.mean(power_vector)
+
+        # Step 2: Compare the average energy to the noise threshold
+        if energy_average > threshold:
+            return "Señal detectada"
+        else:
+            return "No se detecta señal"
+
+
     
-    def covariance_based_detection(freqs, psd, noise_covariance_matrix, threshold):
+    def covariance_based_detection(power_vector: np.ndarray, freq_vector: np.ndarray, threshold: float) -> str:
         """
-        Covariance-based detection using Welch's method.
+        Detect signal presence using covariance-based statistics.
 
         Parameters
         ----------
-        freqs : numpy.ndarray
-            The frequencies corresponding to the power spectral density values.
-        psd : numpy.ndarray
-            The power spectral density values.
-        noise_covariance_matrix : numpy.ndarray
-            The known noise covariance matrix.
+        power_vector : np.ndarray
+            An array representing the power of the signal at various frequencies.
+        freq_vector : np.ndarray
+            An array representing the frequencies corresponding to the power values.
         threshold : float
-            The detection threshold.
+            The threshold value used to determine the presence of a signal based on covariance statistics.
+
         Returns
         -------
-        bool
-            True if signal is detected, False otherwise.
+        str
+            A string indicating whether a signal is detected ("Señal detectada") or not ("No se detecta señal").
+
+        Raises
+        ------
+        ValueError
+            If the power_vector or freq_vector is not a numpy array, or if they are not of the same length.
 
         Notes
         -----
-        This function performs covariance-based detection using the power spectral density
-        calculated via Welch's method. It computes the covariance matrix of the PSD and compares
-        it with a known noise covariance matrix. A test statistic is calculated as the Frobenius norm
-        of the difference between the two covariance matrices. If the test statistic exceeds the specified
-        threshold, the function returns True indicating the detection of a signal.
+        This function computes the covariance matrix of the power matrix obtained from the outer product of the power vector.
+        It then calculates three statistics: T1 (sum of the absolute values of the off-diagonal elements), T2 (sum of the absolute
+        values of all elements), and T3 (trace of the covariance matrix). A signal is considered detected if T3 is greater than
+        the product of the threshold and the sum of T1 and T2.
+
+        BibTeX:
+        @INPROCEEDINGS{4221495,
+        author={Zeng, Yonghong and Liang, Ying-Chang},
+        booktitle={2007 2nd IEEE International Symposium on New Frontiers in Dynamic Spectrum Access Networks}, 
+        title={Covariance Based Signal Detections for Cognitive Radio}, 
+        year={2007},
+        volume={},
+        number={},
+        pages={202-207},
+        keywords={Signal detection;Cognitive radio;Working environment noise;Uncertainty;Covariance matrix;Wireless sensor networks;Fading;Filters;Microphones;TV},
+        doi={10.1109/DYSPAN.2007.33}}
         """
 
-        # Calculate the covariance matrix of the power spectral density
-        psd_covariance_matrix = np.cov(psd)
+        # Calculation of the covariance matrix
+        power_matrix = np.outer(power_vector, power_vector)
+        cov_matrix = np.cov(power_matrix)
 
-        # Calculate the test statistic (e.g., the Frobenius norm of the difference)
-        test_statistic = np.linalg.norm(psd_covariance_matrix - noise_covariance_matrix, 'fro')
+        # T1, T2, and T3 Statistics
+        T1 = np.sum(np.abs(cov_matrix - np.diag(np.diagonal(cov_matrix))))
+        T2 = np.sum(np.abs(cov_matrix))
+        T3 = np.trace(cov_matrix)
 
-        # Compare the test statistic with the threshold
-        return test_statistic > threshold
+        # Comparison with the threshold
+        if T3 > threshold * (T1 + T2):
+            return "Señal detectada"
+        else:
+            return "No se detecta señal"
