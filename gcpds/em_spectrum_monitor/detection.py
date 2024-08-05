@@ -27,10 +27,16 @@ class Detection:
         peak_powers : numpy.ndarray
             The powers of the detected peaks.
         detections : list
-            A list with the frequency and power pairs
+            A list with the frequency and power pairs.
+        threshold : float
+            A floating-point number representing the decision threshold.
         """
 
-        threshold = np.percentile(Pxx, 93)
+        hist, bin = np.histogram(Pxx, bins=500)
+
+        max_rep_indice = np.argmax(hist)
+
+        threshold = 1.5 * bin[max_rep_indice+1]
         
         peaks, properties = find_peaks(Pxx, height=threshold)
 
