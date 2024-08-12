@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
-from processing import Processing
-from detection import Detection
+from gcpds.em_spectrum_monitor.processing import Processing
+from gcpds.em_spectrum_monitor.detection import Detection
 
 class TestScanning(unittest.TestCase):
     """"""
