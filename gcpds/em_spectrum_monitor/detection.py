@@ -1,5 +1,8 @@
 import numpy as np
+from monitor import Scanning
+from processing import Processing
 from scipy.signal import find_peaks
+import warnings
 
 class Detection:
     """"""
@@ -7,6 +10,31 @@ class Detection:
     # ----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
+
+    def antenna_detection(self):
+        """
+        Scans a specified frequency range and checks for the presence of signal peaks to determine if the antenna is connected.
+
+        Parameters
+        ----------
+        None
+
+        Returns
+        -------
+        None
+    """
+        scan = Scanning(vga_gain=16, time_to_read=0.01)
+        wide_samples = scan.scan(88e6, 108e6)
+        samples = scan.concatenate(wide_samples, 'mean')
+
+        pros = Processing()
+        f, Pxx = pros.welch(samples)
+        _, peak_powers, _, _ =self.power_based_detection(f, Pxx)
+
+        if not len(peak_powers)>0:
+             warnings.warn("Verificar la conexión de la antena.", UserWarning)
+        else:
+            pass
 
     # ----------------------------------------------------------------------
     def power_based_detection(self, f: np.ndarray, Pxx: np.ndarray):
