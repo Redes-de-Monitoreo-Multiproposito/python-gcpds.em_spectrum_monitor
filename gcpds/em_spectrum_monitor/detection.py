@@ -3,6 +3,38 @@ from monitor import Scanning
 from processing import Processing
 from scipy.signal import find_peaks
 import warnings
+from dataclasses import dataclass, field
+from typing import Optional
+
+@dataclass(frozen=True)
+class BandwidthDetection:
+    """
+    Data class to store the results of bandwidth detection in signal analysis.
+
+    This class encapsulates the bandwidth information and dominant frequency for a detected signal.
+
+    Attributes
+    ----------
+    f_start : float
+        The starting frequency of the detected bandwidth in Hertz (Hz).
+    f_end : float
+        The ending frequency of the detected bandwidth in Hertz (Hz).
+    f_bandwidth : float
+        The calculated bandwidth of the detected signal in Hertz (Hz), which is the difference between `f_end` and `f_start`.
+    f_Dominant : float
+        The dominant frequency within the detected bandwidth in Hertz (Hz). This is typically the frequency with the highest power or energy.
+    """
+
+    f_start: float
+    f_end: float
+    f_bandwidth: float = field(init=False)
+    f_Dominant: float
+
+    def __post_init__(self):
+        object.__setattr__(self, 'f_bandwidth', self.f_end - self.f_start)   
+        if self.f_bandwidth < 0:
+            raise ValueError("The ending frequency `f_end` must be greater than the starting frequency `f_start`.")
+
 
 class Detection:
     """"""
@@ -87,9 +119,51 @@ class Detection:
         """"""
 
     # ----------------------------------------------------------------------
-    def bandwidth(self):
-        """"""
+    def bandwidth(self, f: np.ndarray, Pxx: np.ndarray, peak_freq: float) -> BandwidthDetection:
+        """
+        Calculate the bandwidth of a signal around a given peak frequency.
 
+        This function identifies the bandwidth around a specified peak frequency by analyzing the power spectrum (Pxx).
+        It determines where the slope of the spectrum changes from negative to positive to identify the edges of the bandwidth.
+
+        Parameters
+        ----------
+        f : np.ndarray
+            Array of frequency values in Hertz (Hz).
+        Pxx : np.ndarray
+            Power spectral density values corresponding to the frequencies in `f`.
+        peak_freq : float
+            The frequency at which the peak occurs, around which the bandwidth will be calculated.
+
+        Returns
+        -------
+        BandwidthDetection
+            A `BandwidthDetection` object containing the starting and ending frequencies of the bandwidth,
+            as well as the dominant (peak) frequency.
+        
+        Raises
+        ------
+        ValueError
+            If the calculated bandwidth is negative, which indicates an error in the input data or calculations.
+        """
+        peak_index = np.argmin(np.abs(f - peak_freq))
+        direction = 1
+        for i in range(peak_index + 1, len(f) - 1, direction):
+            f_current = f[i]
+            Pxx_current = Pxx[i]
+            f_next = f[i + 1]
+            Pxx_next = Pxx[i + 1]
+
+            # Calculate the slope of the power spectrum
+            m = (Pxx_current - Pxx_next) / (f_current - f_next)
+            # Check if the slope changes from negative to positive
+            if m > 0:
+                bandwidth_right = f_next - peak_freq
+                bandwidth_left = bandwidth_right
+                break
+        f_start = peak_freq - bandwidth_left
+        f_end = peak_freq + bandwidth_right
+        return BandwidthDetection(f_start, f_end, f_Dominant=peak_freq)
 
     # ----------------------------------------------------------------------
     def eigenvalue_base_detection_max(power_vector: np.ndarray, freq_vector: np.ndarray, threshold: float) -> str:
