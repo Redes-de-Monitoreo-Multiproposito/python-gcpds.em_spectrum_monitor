@@ -88,8 +88,9 @@ class Processing:
         N = len(signal)
         fft_result = np.fft.fft(signal)
         
-        fft = fft_result[:N//2]
-        fft = np.abs(fft)
+        #fft = fft_result[:N//2]
+        fft = np.abs(fft_result)
+        fft = np.fft.fftshift(fft)
 
         return fft
 
