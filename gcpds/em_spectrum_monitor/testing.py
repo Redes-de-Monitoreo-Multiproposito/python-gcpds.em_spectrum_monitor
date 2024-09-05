@@ -11,10 +11,8 @@ rds = RDS()
 rds.broadcasters('Manizales')
 parameters_prom_12h_final, parameters_prom_12h = rds.parameter(hours_to_scan=12)
 
-print(f'promedio 5m: {parameters_prom_12h[0]}')
-print(f'promedio de promedios 12h: {parameters_prom_12h_final}')
-
-
+# print(f'promedio 5m: {parameters_prom_12h[0]}')
+# print(f'promedio de promedios 12h: {parameters_prom_12h_final}')
 
 # scan =  Scanning(vga_gain=0, time_to_read=0.01)
 # wide_samples1 = scan.scan(88e6, 108e6)
