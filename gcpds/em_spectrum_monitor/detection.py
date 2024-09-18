@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from monitor import Scanning
 from processing import Processing
 from scipy.signal import find_peaks
@@ -42,6 +43,29 @@ class Detection:
     # ----------------------------------------------------------------------
     def __init__(self):
         """Constructor"""
+        self.excel_file = 'Hoja de cálculo sin título (1).xlsx'
+
+    def broadcasters(self, town: str = 'Manizales'):
+        """The frequencies where there are radio stations are extracted according to the selected city.
+
+        Parameters
+        ----------
+        town : string
+            Town to extract broadcasters
+
+        Returns
+        -------
+        NONE
+        """
+        df = pd.read_csv('Radioemisoras Colombia - Radioemisoras 2023.csv')
+
+        datos_filtrados = df[(df['Municipio'].str.upper() == town.upper()) & 
+                                (df['Tecnología transmisión'] == 'FM')]
+    
+        frequencies = datos_filtrados['Frecuencia'].str.replace(' MHz', '', regex=False).astype(float)
+        frequencies = sorted(frequencies)
+
+        return frequencies
 
     def antenna_detection(self):
         """
@@ -96,7 +120,11 @@ class Detection:
 
         max_rep_indice = np.argmax(hist)
 
-        threshold = 1.5 * bin[max_rep_indice+1]
+        bin1 = bin[max_rep_indice]
+
+        threshold =  bin[max_rep_indice+1]
+
+        noise_lvl = (bin1 + threshold) / 3
         
         peaks, properties = find_peaks(Pxx, height=threshold)
 
@@ -105,7 +133,7 @@ class Detection:
 
         detections = [(freq, power) for freq, power in zip(peak_freqs, peak_powers)]
 
-        return peak_freqs, peak_powers, detections, threshold
+        return detections, threshold, noise_lvl
     # ----------------------------------------------------------------------
     def separation(self):
         """"""
@@ -115,7 +143,7 @@ class Detection:
         """"""
 
     # ----------------------------------------------------------------------
-    def SNR(self):
+    def SNR(self, f, Pxx):
         """"""
 
     # ----------------------------------------------------------------------
@@ -147,23 +175,39 @@ class Detection:
             If the calculated bandwidth is negative, which indicates an error in the input data or calculations.
         """
         peak_index = np.argmin(np.abs(f - peak_freq))
-        direction = 1
+        direction = 1  # hacia frecuencias más altas
         for i in range(peak_index + 1, len(f) - 1, direction):
             f_current = f[i]
             Pxx_current = Pxx[i]
             f_next = f[i + 1]
             Pxx_next = Pxx[i + 1]
-
-            # Calculate the slope of the power spectrum
+            
+            # Calcular la pendiente del espectro de potencia
             m = (Pxx_current - Pxx_next) / (f_current - f_next)
-            # Check if the slope changes from negative to positive
+            
+            # Verificar si la pendiente cambia de negativa a positiva
             if m > 0:
-                bandwidth_right = f_next - peak_freq
-                bandwidth_left = bandwidth_right
+                bandwidth_right = f[i] - peak_freq
+                break
+
+        # Calcular hacia la izquierda
+        direction = -1  # hacia frecuencias más bajas
+        for i in range(peak_index - 1, 0, direction):
+            f_current = f[i]
+            Pxx_current = Pxx[i]
+            f_next = f[i - 1]
+            Pxx_next = Pxx[i - 1]
+            
+            # Calcular la pendiente del espectro de potencia
+            m = (Pxx_current - Pxx_next) / (f_current - f_next)
+            
+            # Verificar si la pendiente cambia de positiva a negativa
+            if m < 0:
+                bandwidth_left = peak_freq - f[i]
                 break
         f_start = peak_freq - bandwidth_left
         f_end = peak_freq + bandwidth_right
-        return BandwidthDetection(f_start, f_end, f_Dominant=peak_freq)
+        return f_start, f_end
 
     # ----------------------------------------------------------------------
     def eigenvalue_base_detection_max(power_vector: np.ndarray, freq_vector: np.ndarray, threshold: float) -> str:
