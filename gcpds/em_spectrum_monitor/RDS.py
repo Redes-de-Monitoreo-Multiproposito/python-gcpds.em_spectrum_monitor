@@ -86,12 +86,13 @@ class RDS():
 
             f, Pxx = self.pros.welch(samples, fs=20e6)
             f = np.linspace(88, 108, len(Pxx))
-            
+
+            _, _, noise_lvl = self.detec.power_based_detection(f, Pxx)            
             # plt.semilogy(f, Pxx)
             
             for j in range(len(frequencies)):
 
-                f_start, f_end = self.detec.bandwidth(f, Pxx, frequencies[j])
+                f_start, f_end = self.detec.bandwidth(f, Pxx, frequencies[j], noise_lvl)
                 bandwidth = f_end - f_start
 
                 index = np.where(np.isclose(f, frequencies[j], atol=0.01))[0]
@@ -128,12 +129,14 @@ class RDS():
                 parameters_1s.clear()
 
                 print(f'Promedio {(i+1)/5} adquirido')
-            time.sleep(60)
+            # time.sleep(60)
             print(f'Tiempo: {time.time()-t0}')
     
-        df_12h.to_excel('RDS.xlsx', index=False)
+        # df_12h.to_excel('RDS.xlsx', index=False)
+        print(df_12h.head(20))
         df_12h = pd.DataFrame()
         plt.semilogy(f, Pxx)
+        plt.axhline(noise_lvl, c='green')
         plt.show()
 
         return df_12h

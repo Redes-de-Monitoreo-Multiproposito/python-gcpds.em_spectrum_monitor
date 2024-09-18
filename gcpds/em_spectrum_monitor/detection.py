@@ -147,7 +147,7 @@ class Detection:
         """"""
 
     # ----------------------------------------------------------------------
-    def bandwidth(self, f: np.ndarray, Pxx: np.ndarray, peak_freq: float) -> BandwidthDetection:
+    def bandwidth(self, f: np.ndarray, Pxx: np.ndarray, peak_freq: float, noise_lvl) -> BandwidthDetection:
         """
         Calculate the bandwidth of a signal around a given peak frequency.
 
@@ -175,34 +175,14 @@ class Detection:
             If the calculated bandwidth is negative, which indicates an error in the input data or calculations.
         """
         peak_index = np.argmin(np.abs(f - peak_freq))
-        direction = 1  # hacia frecuencias más altas
-        for i in range(peak_index + 1, len(f) - 1, direction):
-            f_current = f[i]
-            Pxx_current = Pxx[i]
-            f_next = f[i + 1]
-            Pxx_next = Pxx[i + 1]
-            
-            # Calcular la pendiente del espectro de potencia
-            m = (Pxx_current - Pxx_next) / (f_current - f_next)
-            
-            # Verificar si la pendiente cambia de negativa a positiva
-            if m > 0:
+        for i in range(peak_index + 1, len(f)):
+            if Pxx[i] < noise_lvl:
                 bandwidth_right = f[i] - peak_freq
                 break
 
         # Calcular hacia la izquierda
-        direction = -1  # hacia frecuencias más bajas
-        for i in range(peak_index - 1, 0, direction):
-            f_current = f[i]
-            Pxx_current = Pxx[i]
-            f_next = f[i - 1]
-            Pxx_next = Pxx[i - 1]
-            
-            # Calcular la pendiente del espectro de potencia
-            m = (Pxx_current - Pxx_next) / (f_current - f_next)
-            
-            # Verificar si la pendiente cambia de positiva a negativa
-            if m < 0:
+        for i in range(peak_index - 1, -1, -1):
+            if Pxx[i] < noise_lvl:
                 bandwidth_left = peak_freq - f[i]
                 break
         f_start = peak_freq - bandwidth_left
