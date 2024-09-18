@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from scipy.signal import welch
 from mne.time_frequency import psd_array_multitaper
 from typing import Literal
@@ -144,7 +145,7 @@ class Processing:
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be un numpy array")
 
-        f, Pxx = welch(signal, fs=fs, nperseg=1024, window='hann')
+        f, Pxx = welch(signal, fs=fs, nperseg=2048, window=('kaiser', 20), scaling='spectrum')
 
         f = np.fft.fftshift(f)
         Pxx = np.fft.fftshift(Pxx)
