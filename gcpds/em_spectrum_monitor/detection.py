@@ -116,24 +116,20 @@ class Detection:
             A floating-point number representing the decision threshold.
         """
 
-        hist, bin = np.histogram(Pxx, bins=500)
+        noise_lvl = np.percentile(Pxx, 80)
 
-        max_rep_indice = np.argmax(hist)
+        signal_level = np.percentile(Pxx, 90)
 
-        bin1 = bin[max_rep_indice]
-
-        threshold =  bin[max_rep_indice+1]
-
-        noise_lvl = (bin1 + threshold) / 3
+        threshold = (noise_lvl + signal_level) / 1.5 + 0.4 * ((noise_lvl + signal_level) / 1.5)
         
-        peaks, properties = find_peaks(Pxx, height=threshold)
+        peaks, properties = find_peaks(Pxx, height=threshold, distance=50)
 
         peak_powers = properties['peak_heights']
         peak_freqs = f[peaks]
 
-        detections = [(freq, power) for freq, power in zip(peak_freqs, peak_powers)]
+        # detections = [(freq, power) for freq, power in zip(peak_freqs, peak_powers)]
 
-        return detections, threshold, noise_lvl
+        return peak_powers, peak_freqs, threshold, noise_lvl
     # ----------------------------------------------------------------------
     def separation(self):
         """"""
@@ -185,6 +181,7 @@ class Detection:
             if Pxx[i] < noise_lvl:
                 bandwidth_left = peak_freq - f[i]
                 break
+            
         f_start = peak_freq - bandwidth_left
         f_end = peak_freq + bandwidth_right
         return f_start, f_end
