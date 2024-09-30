@@ -145,7 +145,8 @@ class Processing:
         if not isinstance(signal, np.ndarray):
             raise ValueError("Input signal must be un numpy array")
 
-        f, Pxx = welch(signal, fs=fs, nperseg=2048, window=('kaiser', 20), scaling='spectrum')
+        # window=('kaiser', 20)
+        f, Pxx = welch(signal, fs=fs, nperseg=4096, window=('kaiser', 20), scaling='density')
 
         f = np.fft.fftshift(f)
         Pxx = np.fft.fftshift(Pxx)
