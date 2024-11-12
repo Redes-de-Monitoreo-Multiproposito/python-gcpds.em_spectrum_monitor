@@ -27,54 +27,53 @@ def custom_callback(data_freqs, sweep_config):
         count += 1
         f, Pxx = pros.welch(np.array(data_freqs[88000000]), fs=sweep_config['sample_rate'])
         f1, Pxx1 = plt.psd(np.array(data_freqs[88000000]), 1024, 20, 98)
-        plt.show()
         f = np.linspace(88, 108, len(Pxx))
 
-        # plt.semilogy(f, Pxx)
+        plt.semilogy(f, Pxx)
 
-        peak_powers, peak_freqs, threshold, noise_lvl = detec.power_based_detection(f, Pxx)
+        _, _, threshold = detec.power_based_detection(f, Pxx)
 
-        comparation = np.any(np.abs(peak_freqs[:, None] - broad) < 0.1, axis=1)
+        # comparation = np.any(np.abs(peak_freqs[:, None] - broad) < 0.1, axis=1)
 
-        no_reg = peak_freqs[~comparation]
+        # no_reg = peak_freqs[~comparation]
 
         t0 = time.strftime('%X')
 
-        for i in range(len(no_reg)):
-            f_start, f_end = detec.bandwidth(f, Pxx, no_reg[i], noise_lvl)
-            bandwidth = f_end - f_start
-            index = np.where(np.isclose(f, no_reg[i], atol=0.01))[0]
-            parameters.append({
-                        'time': t0,
-                        'freq': round(no_reg[i], 1),
-                        'bandwidth': round(bandwidth, 2),
-                        'power': Pxx[index[0]],
-                        'snr': 10 * np.log10(Pxx[index[0]]/Pxx[0]),
-                        'registered': 'no' 
-                    })
+        # for i in range(len(no_reg)):
+        #     f_start, f_end = detec.bandwidth(f, Pxx, no_reg[i], noise_lvl)
+        #     bandwidth = f_end - f_start
+        #     index = np.where(np.isclose(f, no_reg[i], atol=0.01))[0]
+        #     parameters.append({
+        #                 'time': t0,
+        #                 'freq': round(no_reg[i], 1),
+        #                 'bandwidth': round(bandwidth, 2),
+        #                 'power': Pxx[index[0]],
+        #                 'snr': 10 * np.log10(Pxx[index[0]]/Pxx[0]),
+        #                 'registered': 'no' 
+        #             })
         #     plt.axvline(f_start, c='red')
         #     plt.axvline(f_end, c='red')
 
-        for i in range(len(broad)):
-            f_start, f_end = detec.bandwidth(f, Pxx, broad[i], noise_lvl)
-            bandwidth = f_end - f_start
-            index = np.where(np.isclose(f, broad[i], atol=0.01))[0]
+        # for i in range(len(broad)):
+        #     f_start, f_end = detec.bandwidth(f, Pxx, broad[i], 2e-15)
+        #     bandwidth = f_end - f_start
+        #     index = np.where(np.isclose(f, broad[i], atol=0.01))[0]
 
-            parameters.append({
-                        'time': t0,
-                        'freq': round(broad[i], 1),
-                        'bandwidth': round(bandwidth, 2),
-                        'power': Pxx[index[0]],
-                        'snr': 10 * np.log10(Pxx[index[0]]/Pxx[0]),
-                        'registered': 'yes'
-                    })
-            # plt.axvline(f_start, c='red')
-            # plt.axvline(f_end, c='red')
+        #     parameters.append({
+        #                 'time': t0,
+        #                 'freq': round(broad[i], 1),
+        #                 'bandwidth': round(bandwidth, 2),
+        #                 'power': Pxx[index[0]],
+        #                 'snr': 10 * np.log10(Pxx[index[0]]/Pxx[0]),
+        #                 'registered': 'yes'
+        #             })
+        #     plt.axvline(f_start, c='red')
+        #     plt.axvline(f_end, c='red')
 
         # plt.scatter(peak_freqs, peak_powers)
         # plt.axhline(noise_lvl, c='green')
-        # plt.axhline(threshold, c='green')
-        # plt.show()
+        plt.axhline(threshold, c='green')
+        plt.show()
         parameters_1s.append(parameters)
         print(f'Muestra #{count} adquirida y procesada')
 

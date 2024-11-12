@@ -1,11 +1,7 @@
 import numpy as np
 import pandas as pd
-from monitor import Scanning
-from processing import Processing
 from scipy.signal import find_peaks
-import warnings
 from dataclasses import dataclass, field
-from typing import Optional
 
 @dataclass(frozen=True)
 class BandwidthDetection:
@@ -67,31 +63,6 @@ class Detection:
 
         return frequencies
 
-    def antenna_detection(self):
-        """
-        Scans a specified frequency range and checks for the presence of signal peaks to determine if the antenna is connected.
-
-        Parameters
-        ----------
-        None
-
-        Returns
-        -------
-        None
-    """
-        scan = Scanning(vga_gain=16, time_to_read=0.01)
-        wide_samples = scan.scan(88e6, 108e6)
-        samples = scan.concatenate(wide_samples, 'mean')
-
-        pros = Processing()
-        f, Pxx = pros.welch(samples)
-        _, peak_powers, _, _ =self.power_based_detection(f, Pxx)
-
-        if not len(peak_powers)>0:
-             warnings.warn("Verificar la conexión de la antena.", UserWarning)
-        else:
-            pass
-
     # ----------------------------------------------------------------------
     def power_based_detection(self, f: np.ndarray, Pxx: np.ndarray):
         """
@@ -116,20 +87,22 @@ class Detection:
             A floating-point number representing the decision threshold.
         """
 
-        noise_lvl = np.percentile(Pxx, 80)
+        # noise_lvl = np.percentile(Pxx, 80)
 
-        signal_level = np.percentile(Pxx, 90)
+        # signal_level = np.percentile(Pxx, 90)
 
-        threshold = (noise_lvl + signal_level) / 1.5 + 0.4 * ((noise_lvl + signal_level) / 1.5)
+        # threshold = (noise_lvl + signal_level) / 1.5 + 0.4 * ((noise_lvl + signal_level) / 1.5)
+
+        threshold = 2e-15
         
-        peaks, properties = find_peaks(Pxx, height=threshold, distance=50)
+        peaks, properties = find_peaks(Pxx, height=threshold, distance=10)
 
         peak_powers = properties['peak_heights']
         peak_freqs = f[peaks]
 
         # detections = [(freq, power) for freq, power in zip(peak_freqs, peak_powers)]
 
-        return peak_powers, peak_freqs, threshold, noise_lvl
+        return peak_powers, peak_freqs, threshold#, noise_lvl
     # ----------------------------------------------------------------------
     def separation(self):
         """"""

@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from scipy.signal import welch
 from mne.time_frequency import psd_array_multitaper
 from typing import Literal
@@ -96,7 +95,7 @@ class Processing:
         return fft
 
     # ----------------------------------------------------------------------
-    def welch(self, signal: np.ndarray, fs: float = 20e6) -> np.ndarray:
+    def welch(self, signal: np.ndarray, fs: float = 20) -> np.ndarray:
         """
         Estimate the power spectral density of the given signal using Welch's method.
 
@@ -146,7 +145,7 @@ class Processing:
             raise ValueError("Input signal must be un numpy array")
 
         # window=('kaiser', 20)
-        f, Pxx = welch(signal, fs=fs, nperseg=4096, window=('kaiser', 20), scaling='density')
+        f, Pxx = welch(signal, fs=fs, nperseg=1024, window=np.hanning(1024), noverlap=0)
 
         f = np.fft.fftshift(f)
         Pxx = np.fft.fftshift(Pxx)

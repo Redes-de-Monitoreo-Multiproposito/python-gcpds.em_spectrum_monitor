@@ -1,5 +1,4 @@
 import time
-import threading
 import numpy as np
 import pandas as pd 
 import matplotlib.pyplot as plt
@@ -15,7 +14,7 @@ class RDS():
                  sample_rate: float = 20e6,
                  overlap: int = 0,
                  time_to_read: float = 1,):
-        #self.scan = Scanning(vga_gain=vga_gain, lna_gain=lna_gain, sample_rate=sample_rate, overlap=overlap, time_to_read=time_to_read)
+        self.scan = Scanning(vga_gain=vga_gain, lna_gain=lna_gain, sample_rate=sample_rate, overlap=overlap, time_to_read=time_to_read)
         self.pros = Processing()
         self.detec = Detection()
         self.excel_file = 'Hoja de cálculo sin título (1).xlsx'
@@ -67,28 +66,26 @@ class RDS():
         - 'bandwidth' : Bandwidth for each broadcaster.
         - 'power' : power in central frequency for each broadcaster.
         """
-
         frequencies = self.detec.broadcasters(city)
         
         parameters_1s = []
         parameters = []
         df_12h = pd.DataFrame()
         times = (hours_to_scan * 60)
-
-        # f, Pxx = pros.welch(np.array(data_freqs[88000000]), fs=sweep_config['sample_rate'])
-        # f, Pxx = self.pros.welch(samples, fs=20e6)
-        # f = np.linspace(88, 108, len(Pxx))
+        times = 100
+        f = np.linspace(88, 108, 4096)
 
         for i in range(int(times)):
             
             t0 = time.time()
-            samples = np.load(f'database/Samples 88 and 108MHz,time to read 0.01s, sample #{i}.npy')
 
-            f, Pxx = self.pros.welch(samples, fs=20e6)
-            f = np.linspace(88, 108, len(Pxx))
+            samples = self.scan.scan(88e6, 108e6)
+            samples = self.scan.concatenate(samples, 'mean')
 
-            _, _, noise_lvl = self.detec.power_based_detection(f, Pxx)            
-            # plt.semilogy(f, Pxx)
+            _, Pxx = self.pros.welch(samples, fs=20e6)
+
+            peak_powers, peak_freqs, threshold, noise_lvl = self.detec.power_based_detection(f, Pxx)    
+            # plt.plot(f, 10 * np.log10(Pxx), c='red')
             
             for j in range(len(frequencies)):
 
@@ -101,13 +98,18 @@ class RDS():
                             'time': time.strftime('%X'),
                             'freq': round(frequencies[j], 1),
                             'bandwidth': round(bandwidth, 2),
-                            'power': Pxx[index[0]],
+                            'power': 10 * np.log10(Pxx[index[0]]),
                             'snr': 10 * np.log10(Pxx[index[0]]/Pxx[0])
                         })
-                plt.axvline(f_end, c='red')
-                plt.axvline(f_start, c='red')
+                # plt.axvline(f_end, c='blue')
+                # plt.axvline(f_start, c='blue')
+                # plt.axhline(10 * np.log10(noise_lvl), c='blue')
+                # plt.axhline(10 * np.log10(threshold), c='green')
             parameters_1s.append(parameters)
-        
+            # plt.scatter(peak_freqs, 10*np.log10(peak_powers))
+            # plt.xlabel('frequency [Hz]')
+            # plt.ylabel('Linear spectrum [V RMS]')
+            # plt.ylim(-123, -85)
             # plt.show()
 
             print(f'Muestra min {i+1} adquirida y procesada')
@@ -132,11 +134,10 @@ class RDS():
             # time.sleep(60)
             print(f'Tiempo: {time.time()-t0}')
     
-        # df_12h.to_excel('RDS.xlsx', index=False)
-        print(df_12h.head(20))
+        df_12h.to_excel('RDS_4h.xlsx', index=False)
         df_12h = pd.DataFrame()
-        plt.semilogy(f, Pxx)
-        plt.axhline(noise_lvl, c='green')
-        plt.show()
+        # plt.semilogy(f, Pxx)
+        # plt.axhline(noise_lvl, c='green')
+        # plt.show()
 
         return df_12h
